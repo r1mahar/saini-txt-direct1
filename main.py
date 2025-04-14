@@ -19,6 +19,7 @@ from pyromod import listen
 from subprocess import getstatusoutput
 from pytube import YouTube
 from aiohttp import web
+from PIL import Image, ImageDraw, ImageFont
 
 from pyrogram import Client, filters
 from pyrogram.types import Message
@@ -432,24 +433,61 @@ async def txt_handler(bot: Client, m: Message):
     input4: Message = await bot.listen(editable.chat.id)
     raw_text4 = input4.text
     await input4.delete(True)
-            
     await editable.edit(f"01. 🌅Send ☞ Direct **Thumb Photo**\n\n"
-                        f"02. 🔗Send ☞ `Thumb URL` for **Thumbnail**\n\n"
-                        f"03. 🎞️Send ☞ `no` for **video** format\n\n"
-                        f"04. 📁Send ☞ `No` for **Document** format")
-    input6 = message = await bot.listen(editable.chat.id)
-    raw_text6 = input6.text
-    await input6.delete(True)
-    await editable.delete()
+                    f"02. 🔗Send ☞ `Thumb URL` for **Thumbnail**\n\n"
+                    f"03. 🎞️Send ☞ `no` for **video** format\n\n"
+                    f"04. 📁Send ☞ `No` for **Document** format")
 
-    thumb = input6
-    if input6.photo:
-        thumb = await input6.download()
-    elif raw_text6.startswith("http://") or raw_text6.startswith("https://"):
-        getstatusoutput(f"wget '{raw_text6}' -O 'thumb.jpg'")
-        thumb = "thumb.jpg"
-    else:
-        thumb = raw_text6
+input6 = message = await bot.listen(editable.chat.id)
+raw_text6 = input6.text
+await input6.delete(True)
+await editable.delete()
+
+thumb = input6
+
+if input6.photo:
+    thumb = await input6.download()
+
+elif raw_text6.startswith("http://") or raw_text6.startswith("https://"):
+    getstatusoutput(f"wget '{raw_text6}' -O 'thumb.jpg'")
+    thumb = "thumb.jpg"
+
+else:
+    # User ne naam diya hai, image banate hain
+    img = Image.new("RGB", (1280, 720), color=(0, 0, 0))  # black background
+    draw = ImageDraw.Draw(img)
+
+    try:
+        font = ImageFont.truetype("arial.ttf", 70)  # Use available font
+    except:
+        font = ImageFont.load_default()
+
+    text = raw_text6.strip()
+    text_width, text_height = draw.textsize(text, font=font)
+    x = (1280 - text_width) // 2
+    y = (720 - text_height) // 2
+
+    draw.text((x, y), text, font=font, fill=(255, 255, 255))  # White text
+    img.save("thumb.jpg")
+    thumb = "thumb.jpg"
+            
+   # await editable.edit(f"01. 🌅Send ☞ Direct **Thumb Photo**\n\n"
+                   #     f"02. 🔗Send ☞ `Thumb URL` for **Thumbnail**\n\n"
+                    #    f"03. 🎞️Send ☞ `no` for **video** format\n\n"
+                     #   f"04. 📁Send ☞ `No` for **Document** format")
+  #  input6 = message = await bot.listen(editable.chat.id)
+#    raw_text6 = input6.text
+ #   await input6.delete(True)
+#    await editable.delete()
+
+ #   thumb = input6
+ #   if input6.photo:
+  #      thumb = await input6.download()
+   # elif raw_text6.startswith("http://") or raw_text6.startswith("https://"):
+  #      getstatusoutput(f"wget '{raw_text6}' -O 'thumb.jpg'")
+    #    thumb = "thumb.jpg"
+  #  else:
+    #    thumb = raw_text6
 
     await m.reply_text(
         f"<pre><code>🎯Target Batch : {b_name}</code></pre>"
